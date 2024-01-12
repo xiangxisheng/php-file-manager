@@ -1,0 +1,4 @@
+DirectoryIndex index.php
+<Files ~ ".(php|html|htm|css|js|ttf|woff|ico)">
+Require all granted
+</Files>
