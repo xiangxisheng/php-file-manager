@@ -1,6 +1,6 @@
 <?php
 //Default Configuration
-$CONFIG = '{"lang":"en","error_reporting":false,"show_hidden":false,"hide_Cols":false,"theme":"light"}';
+$CONFIG = '{"lang":"zh-CN","error_reporting":true,"show_hidden":true,"hide_Cols":true,"theme":"dark"}';
 
 /**
  * H3K | Tiny File Manager V2.5.3
@@ -245,7 +245,8 @@ $is_https = isset($_SERVER['HTTPS']) && ($_SERVER['HTTPS'] == 'on' || $_SERVER['
 
 // update $root_url based on user specific directories
 if (isset($_SESSION[FM_SESSION_ID]['logged']) && !empty($directories_users[$_SESSION[FM_SESSION_ID]['logged']])) {
-    $wd = fm_clean_path(dirname($_SERVER['PHP_SELF']));
+    //$wd = fm_clean_path(dirname($_SERVER['PHP_SELF']));
+    $wd = '';
     $root_url =  $root_url.$wd.DIRECTORY_SEPARATOR.$directories_users[$_SESSION[FM_SESSION_ID]['logged']];
 }
 // clean $root_url
@@ -258,7 +259,7 @@ defined('FM_SELF_URL') || define('FM_SELF_URL', ($is_https ? 'https' : 'http') .
 // logout
 if (isset($_GET['logout'])) {
     unset($_SESSION[FM_SESSION_ID]['logged']);
-    unset( $_SESSION['token']); 
+    unset($_SESSION['token']);
     fm_redirect(FM_SELF_URL);
 }
 
@@ -551,6 +552,17 @@ if ((isset($_SESSION[FM_SESSION_ID]['logged'], $auth_users[$_SESSION[FM_SESSION_
         }
         $cfg->save();
         echo true;
+    }
+
+    // change password
+    if (isset($_POST['type']) && $_POST['type'] == "changepwd") {
+        $password = isset($_POST['password']) ? $_POST['password'] : '';
+        $auth_users[$_SESSION[FM_SESSION_ID]['logged']] = password_hash($password, PASSWORD_DEFAULT);
+        file_put_contents(__DIR__ . '/.auth_users', json_encode($auth_users));
+        unset($_SESSION[FM_SESSION_ID]['logged']);
+        unset($_SESSION['token']);
+        fm_redirect(FM_SELF_URL);
+        exit;
     }
 
     // new password hash
@@ -1570,6 +1582,49 @@ if (isset($_GET['settings']) && !FM_READONLY) {
     fm_show_footer();
     exit;
 }
+
+
+
+if (isset($_GET['changepwd']) && !FM_READONLY) {
+    fm_show_header(); // HEADER
+    fm_show_nav_path(FM_PATH); // current path
+    global $cfg, $lang, $lang_list;
+    ?>
+
+    <div class="col-md-8 offset-md-2 pt-3">
+        <div class="card mb-2 <?php echo fm_get_theme(); ?>">
+            <h6 class="card-header d-flex justify-content-between">
+                <span><i class="fa fa-cog"></i>  修改密码</span>
+                <a href="?p=<?php echo FM_PATH ?>" class="text-danger"><i class="fa fa-times-circle-o"></i> <?php echo lng('Cancel')?></a>
+            </h6>
+            <div class="card-body">
+                <form id="js-settings-form" action="" method="post" data-type="ajax" onsubmit="return save_settings(this)">
+                    <input type="hidden" name="type" value="changepwd" aria-label="hidden" aria-hidden="true">
+
+                    <div class="mt-3 mb-3 row ">
+                        <label for="new-pwd" class="col-sm-3 col-form-label">设置新密码</label>
+                        <div class="col-sm-9">
+<input type="password" name="password" id="password" class="form-control" placeholder="请输入新密码" required="required">
+                        </div>
+                    </div>
+
+                    <div class="mb-3 row">
+                        <div class="col-sm-10">
+                            <button type="submit" class="btn btn-success"> <i class="fa fa-check-circle"></i> <?php echo lng('Save'); ?></button>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+    <?php
+    fm_show_footer();
+    exit;
+}
+
+
+
 
 if (isset($_GET['help'])) {
     fm_show_header(); // HEADER
@@ -3578,6 +3633,7 @@ function fm_show_nav_path($path)
                             <?php if (!FM_READONLY): ?>
                             <a title="<?php echo lng('Settings') ?>" class="dropdown-item nav-link" href="?p=<?php echo urlencode(FM_PATH) ?>&amp;settings=1"><i class="fa fa-cog" aria-hidden="true"></i> <?php echo lng('Settings') ?></a>
                             <?php endif ?>
+                            <a title="修改密码" class="dropdown-item nav-link" href="?p=<?php echo urlencode(FM_PATH) ?>&amp;changepwd=1"><i class="fa fa-cog" aria-hidden="true"></i> 修改密码</a>
                             <a title="<?php echo lng('Help') ?>" class="dropdown-item nav-link" href="?p=<?php echo urlencode(FM_PATH) ?>&amp;help=2"><i class="fa fa-exclamation-circle" aria-hidden="true"></i> <?php echo lng('Help') ?></a>
                             <a title="<?php echo lng('Logout') ?>" class="dropdown-item nav-link" href="?logout=1"><i class="fa fa-sign-out" aria-hidden="true"></i> <?php echo lng('Logout') ?></a>
                         </div>
