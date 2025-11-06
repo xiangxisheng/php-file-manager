@@ -1,26 +1,19 @@
-version: '3.8'
 services:
-  php74:
-    container_name: 'php-drive'
-    hostname: 'php-drive'
-    image: 'php:7.4-apache'
+  php:
+    container_name: 'php-file-manager'
+    hostname: 'php-file-manager'
+    image: 'php:8.4-apache'
     restart: unless-stopped
-    ports:
-      - '2052:80'
-      - '2053:443'
     volumes:
+      - ./etc/apache2/sites-enabled:/etc/apache2/sites-enabled
       - ./script:/root/script
       - ./log:/root/log
-      - ./wwwroot:/var/www/html
-      - /users:/users
-    networks:
-      - net1
+      - ./wwwroot:/var/www/tfm
+      - ./html:/var/www/html
+      - /users:/var/www/users
     environment:
       - APACHE_LOG_DIR=/root/log
     entrypoint: ["sh", "/root/script/start.sh"]
-
-networks:
-  net1:
-    external: true
-
-
+    network_mode: host
+    storage_opt:
+      size: 500M
