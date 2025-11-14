@@ -2,7 +2,7 @@
 
 /*
 #################################################################################################################
-This is an OPTIONAL configuration file. rename this file into config.php to use this configuration 
+This is an OPTIONAL configuration file. rename this file into config.php to use this configuration
 The role of this file is to make updating of "tinyfilemanager.php" easier.
 So you can:
 -Feel free to remove completely this file and configure "tinyfilemanager.php" as a single file application.
@@ -10,6 +10,18 @@ or
 -Put inside this file all the static configuration you want and forgot to configure "tinyfilemanager.php".
 #################################################################################################################
 */
+
+// Check if .auth_users file exists, if not redirect to install page
+$auth_users_file = __DIR__ . '/.auth_users';
+if (!file_exists($auth_users_file)) {
+    // Skip redirect for install.php and user_manager.php
+    $current_script = basename($_SERVER['PHP_SELF']);
+    if ($current_script !== 'install.php' && $current_script !== 'user_manager.php') {
+        header('Location: install.php');
+        exit;
+    }
+}
+
 $CONFIG = '{"lang":"zh-CN","error_reporting":true,"show_hidden":true,"hide_Cols":true,"theme":"light"}';
 
 // Auth with login/password
@@ -22,7 +34,11 @@ $use_auth = true;
 // Generate secure password hash - https://tinyfilemanager.github.io/docs/pwd.html
 //$auth_users = array();
 //$auth_users['kk'] = password_hash('kk', PASSWORD_DEFAULT);
-$auth_users = json_decode(file_get_contents(__DIR__ . '/.auth_users'), true);
+if (file_exists($auth_users_file)) {
+    $auth_users = json_decode(file_get_contents($auth_users_file), true);
+} else {
+    $auth_users = array();
+}
 
 // Readonly users
 // e.g. array('users', 'guest', ...)
